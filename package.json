@@ -1,0 +1,48 @@
+{
+  "name": "redux-typed-saga",
+  "version": "0.0.1",
+  "description": "The Flow-typed alternative to Redux-Saga",
+  "main": "dist/index.js",
+  "scripts": {
+    "eslint": "eslint src",
+    "flow": "flow",
+    "prepublish": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goshakkk/redux-typed-saga.git"
+  },
+  "keywords": [
+    "redux",
+    "saga",
+    "redux-saga",
+    "generators",
+    "flow",
+    "flowtype",
+    "typed",
+    "well-typed"
+  ],
+  "author": "Gosha Arinich",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/goshakkk/redux-typed-saga/issues"
+  },
+  "homepage": "https://github.com/goshakkk/redux-typed-saga#readme",
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.18.2",
+    "babel-eslint": "^7.1.0",
+    "babel-plugin-syntax-flow": "^6.18.0",
+    "babel-plugin-transform-flow-strip-types": "^6.18.0",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-2": "^6.18.0",
+    "babylon": "^6.13.1",
+    "eslint": "^3.10.0",
+    "eslint-plugin-babel": "^3.3.0",
+    "flow-bin": "^0.34.0",
+    "rollup": "^0.36.3",
+    "rollup-plugin-babel": "^2.6.1",
+    "rollup-plugin-uglify": "^1.0.1"
+  }
+}
