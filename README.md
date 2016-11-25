@@ -7,7 +7,7 @@ However, Redux Ship has a totally different paradigm.
 This :construction: experimental project aims to rethink redux-saga with types as first-class citizens.
 
 
-### Installation and usage
+## Installation and usage
 
 ```
 npm install --save redux-typed-saga@https://github.com/goshakkk/redux-typed-saga.git
@@ -27,12 +27,22 @@ const store = createStore(reducer, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(saga());
 ```
 
-### Commands
+## The type
+
+The sagas will generally have a return type of `Saga<Action, State, any>` where:
+
+* `Action` is the type of Redux actions;
+* `State` is the type of Redux state;
+* `any` is the return type of the saga. Top-level sagas don't usually have a return type, so `any` or `void` it is.
+
+The type of middleware is pretty self-explanatory: `SagaMiddleware<State, Action>`.
+
+## Commands
 
 Commands are called using `yield*`, as opposed to `yield` in redux-saga.
 The reason for this is: typing.
 
-`yield`s are painful to type, therefore there are properly typed wrappers for common comamnds.
+`yield`s are painful to type, therefore there are properly typed wrappers for commands.
 
 * `put<Action, State>(action: Action): Saga<Action, State, void>`
 
@@ -50,7 +60,7 @@ The reason for this is: typing.
   To work around that, `take` instead accepts a matcher function, that takes in an `Action`, and maybe returns some type `A`, which is usually:
 
   1. a type of single action, or
-  2. a disjoing union type, if you're matching several actions
+  2. a disjoint union type, if you're matching several actions
 
   If `null` is returned, the action is not matched, and we're waiting for other actions.
 
@@ -59,9 +69,9 @@ The reason for this is: typing.
   * `take('SOME_ACTION_TYPE')`. Its counterpart in redux-typed-saga is `take(x => x.type === 'SOME_ACTION_TYPE' ? x : null)`, and the return type will be an object type for that action.
   * `take(['ACTION1', 'ACTION2'])`. Its counterpart in redux-typed-saga is `take(x => x.type === 'ACTION1' || x.type === 'ACTION2' ? x : null)`, and the return type will be a disjoint union of these two action types.
 
-  It is a bit more verbose, but in return, it makes your project easier to test.
+  It is a bit more verbose, but in return, it makes your project easier to type correctly.
 
-### Pending
+## Pending
 
 The alternative for `call` is still pending implementation. It doesn't look like there is a way to make it well-typed without sacrificing its testability.
 
@@ -70,7 +80,7 @@ I was also inspired by arbitrary side-effect handling in Redux Ship and might en
 Note this is an early :construction: prototype.
 It doesn't really support Redux-saga's process paradigm yet, for one.
 
-### Example
+## Example
 
 ```javascript
 import { createSagaMiddleware, select, put, take } from 'redux-typed-saga';
@@ -110,6 +120,6 @@ const store = createStore(reducer, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(saga());
 ```
 
-### License
+## License
 
 MIT.
