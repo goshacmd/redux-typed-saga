@@ -89,29 +89,26 @@ It doesn't really support Redux-saga's process paradigm yet, for one.
 ## Example
 
 ```javascript
-import { createSagaMiddleware, select, put, take } from 'redux-typed-saga';
-import type { Saga, SagaMiddleware } from 'redux-typed-saga';
-
 type State = number;
 type Action = { type: 'INC' } | { type: 'DEC' } | { type: 'SET', value: number };
 
-function reducer(state: State =  0, action: Action) {
-  switch (action.type) {
-    case 'INC':
-      return state + 1;
-    case 'DEC':
-      return state - 1;
-    case 'SET':
-      return action.value;
-    default:
-      return state;
-  }
+// SAGAS
+import { select, put, take } from 'redux-typed-saga';
+import type { Saga } from 'redux-typed-saga';
+
+function* saga(): Saga<Effect, Action, State, void> {
+  const num = yield* select(x => x + 10);
+  console.log('+10=', num);
+  yield* put(set(50));
+  const action = yield* take(x => x.type === 'SET' ? x : null);
+  console.log('set', action.value);
+
+  console.log('waiting one sec');
+  yield* wait(1);
+  console.log('one sec passed');
 }
 
-const inc = () => ({ type: 'INC' });
-const dec = () => ({ type: 'DEC' });
-const set = (value: number) => ({ type: 'SET', value });
-
+// EFFECTS
 type Effect =
   { type: 'wait', secs: number } |
   { type: 'httpRequest', url: string, method: 'GET' | 'POST' | 'PUT', body: ?string };
@@ -143,22 +140,32 @@ function httpRequest<Action, State>(url: string, method: 'GET' | 'POST' | 'PUT' 
   return call({ type: 'httpRequest', url, method, body });
 }
 
-function* saga(): Saga<Effect, Action, State, void> {
-  const num = yield* select(x => x + 10);
-  console.log('+10=', num);
-  yield* put(set(50));
-  const action = yield* take(x => x.type === 'SET' ? x : null);
-  console.log('set', action.value);
-
-  console.log('waiting one sec');
-  yield* wait(1);
-  console.log('one sec passed');
-}
-
+// SETUP
+import { createSagaMiddleware } from 'redux-typed-saga';
+import type { SagaMiddleware } from 'redux-typed-saga';
 const sagaMiddleware: SagaMiddleware<State, Action> = createSagaMiddleware();
 const store = createStore(reducer, applyMiddleware(sagaMiddleware));
 
 sagaMiddleware.run(runEffect, saga());
+
+// REDUCER
+function reducer(state: State =  0, action: Action) {
+  switch (action.type) {
+    case 'INC':
+      return state + 1;
+    case 'DEC':
+      return state - 1;
+    case 'SET':
+      return action.value;
+    default:
+      return state;
+  }
+}
+
+// ACTION CREATORS
+const inc = () => ({ type: 'INC' });
+const dec = () => ({ type: 'DEC' });
+const set = (value: number) => ({ type: 'SET', value });
 ```
 
 ## License
