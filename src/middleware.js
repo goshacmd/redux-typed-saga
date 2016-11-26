@@ -2,13 +2,17 @@
 
 import emitter from './emitter';
 import type { Emitter, SubscribeFn } from './emitter';
-import type { Saga } from './types';
+import type { Saga, EffectRunner } from './types';
 import createRunner from './runner';
 import type { Runner } from './runner';
 
+type NewState<Action, State> = (next: (action: Action) => State) => (action: Action) => State;
 export type SagaMiddleware<State, Action> = {
-  (options: { getState: () => State, dispatch: (action: Action) => void }): (next: (action: Action) => State) => (action: Action) => State;
-  run: (saga: Saga<Action, State, any>) => void;
+  (options: {
+    getState: () => State,
+    dispatch: (action: Action) => void },
+  ): NewState<Action, State>;
+  run: <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>) => void;
 };
 
 export default function createSagaMiddleware<State, Action>(): SagaMiddleware<State, Action> {
@@ -23,8 +27,8 @@ export default function createSagaMiddleware<State, Action>(): SagaMiddleware<St
       return next(action);
     };
   }
-  sagaMiddleware.run = (saga: Saga<Action, State, any>) => {
-    runSagaDynamically(saga);
+  sagaMiddleware.run = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>) => {
+    runSagaDynamically(runEffect, saga);
   };
 
   return sagaMiddleware;

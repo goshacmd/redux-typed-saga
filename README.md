@@ -17,20 +17,21 @@ npm install --save redux-typed-saga@https://github.com/goshakkk/redux-typed-saga
 import { createSagaMiddleware, select, put, take } from 'redux-typed-saga';
 import type { Saga, SagaMiddleware } from 'redux-typed-saga';
 
-function* saga(): Saga<Action, State, void> {
+function* saga(): Saga<Effect, Action, State, void> {
   ...
 }
 
 const sagaMiddleware: SagaMiddleware<State, Action> = createSagaMiddleware();
 const store = createStore(reducer, applyMiddleware(sagaMiddleware));
 
-sagaMiddleware.run(saga());
+sagaMiddleware.run(runEffect, saga());
 ```
 
 ## The type
 
-The sagas will generally have a return type of `Saga<Action, State, any>` where:
+The sagas will generally have a return type of `Saga<Effect, Action, State, any>` where:
 
+* `Effect` is the type of possible side effects, similar to Redux Ship;
 * `Action` is the type of Redux actions;
 * `State` is the type of Redux state;
 * `any` is the return type of the saga. Top-level sagas don't usually have a return type, so `any` or `void` it is.
@@ -44,15 +45,15 @@ The reason for this is: typing.
 
 `yield`s are painful to type, therefore there are properly typed wrappers for commands.
 
-* `put<Action, State>(action: Action): Saga<Action, State, void>`
+* `put<Effect, Action, State>(action: Action): Saga<Effect, Action, State, void>`
 
   Works exactly as in redux-saga.
 
-* `select<Action, State, A>(selector: (state: State) => A): Saga<Action, State, A>`
+* `select<Effect, Action, State, A>(selector: (state: State) => A): Saga<Effect, Action, State, A>`
 
-  Again, just like in redux-saga, it accepts a selector or type `State => A`, and returns `A`.
+  Again, just like in redux-saga, it accepts a selector of type `State => A`, and returns `A`.
 
-* `take<Action, State, A>(actionMatcher: (action: Action) => ?A): Saga<Action, State, A>`
+* `take<Effect, Action, State, A>(actionMatcher: (action: Action) => ?A): Saga<Effect, Action, State, A>`
 
   This one is different, however.
   The `take('ACTION_TYPE')` syntax is impossible to type correctly, and returning `Action` isn't nice.
@@ -71,11 +72,16 @@ The reason for this is: typing.
 
   It is a bit more verbose, but in return, it makes your project easier to type correctly.
 
+* `call<Effect, Action, State, A>(effect: Effect): Saga<Effect, Action, State, any>`
+
+  This one is different from the one provided by redux-saga.
+
+  Inspired by Redux Ship, the `call` command allows for evalution of arbitrary side effects.
+
+  To actually apply the effect, redux-typed-saga will call the `runEffect` function that you have to pass to `sagaMiddleware.run(runEffect, saga)`.
+  The `runEffect` function has a type of `(effect: Effect) => Promise<any>`.
+
 ## Pending
-
-The alternative for `call` is still pending implementation. It doesn't look like there is a way to make it well-typed without sacrificing its testability.
-
-I was also inspired by arbitrary side-effect handling in Redux Ship and might end up implementing similar.
 
 Note this is an early :construction: prototype.
 It doesn't really support Redux-saga's process paradigm yet, for one.
@@ -106,18 +112,34 @@ const inc = () => ({ type: 'INC' });
 const dec = () => ({ type: 'DEC' });
 const set = (value: number) => ({ type: 'SET', value });
 
-function* saga(): Saga<Action, State, void> {
+type Effect = { type: 'wait', secs: number };
+
+function runEffect(effect: Effect): Promise<any> {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(effect.secs), effect.secs * 1000);
+  });
+}
+
+function* wait(secs: number): Saga<Effect, Action, state, number> {
+  return yield* call({ type: 'wait', secs });
+}
+
+function* saga(): Saga<Effect, Action, State, void> {
   const num = yield* select(x => x + 10);
   console.log('+10=', num);
   yield* put(set(50));
   const action = yield* take(x => x.type === 'SET' ? x : null);
   console.log('set', action.value);
+
+  console.log('waiting one sec');
+  yield* wait(1);
+  console.log('one sec passed');
 }
 
 const sagaMiddleware: SagaMiddleware<State, Action> = createSagaMiddleware();
 const store = createStore(reducer, applyMiddleware(sagaMiddleware));
 
-sagaMiddleware.run(saga());
+sagaMiddleware.run(runEffect, saga());
 ```
 
 ## License
