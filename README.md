@@ -112,16 +112,35 @@ const inc = () => ({ type: 'INC' });
 const dec = () => ({ type: 'DEC' });
 const set = (value: number) => ({ type: 'SET', value });
 
-type Effect = { type: 'wait', secs: number };
+type Effect =
+  { type: 'wait', secs: number } |
+  { type: 'httpRequest', url: string, method: 'GET' | 'POST' | 'PUT', body: ?string };
 
 function runEffect(effect: Effect): Promise<any> {
-  return new Promise(resolve => {
-    setTimeout(() => resolve(effect.secs), effect.secs * 1000);
-  });
+  switch (effect.type) {
+    case 'wait': {
+      const { secs } = effect;
+      return new Promise((resolve, reject) => {
+        setTimeout(() => reject(secs), secs * 1000);
+      });
+    }
+    case 'httpRequest': {
+      return fetch(effect.url, {
+        method: effect.method,
+        body: effect.body,
+      }).then(x => x.text());
+    }
+    default:
+      return Promise.resolve();
+  }
 }
 
-function* wait(secs: number): Saga<Effect, Action, state, number> {
+function* wait<Action, State>(secs: number): Saga<Effect, Action, State, number> {
   return yield* call({ type: 'wait', secs });
+}
+
+function* httpRequest<Action, State>(url: string, method: 'GET' | 'POST' | 'PUT' = 'GET', body: ?string): Saga<Effect, Action, State, string> {
+  return yield* call({ type: 'httpRequest', url, method, body });
 }
 
 function* saga(): Saga<Effect, Action, State, void> {
