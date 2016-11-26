@@ -135,12 +135,12 @@ function runEffect(effect: Effect): Promise<any> {
   }
 }
 
-function* wait<Action, State>(secs: number): Saga<Effect, Action, State, number> {
-  return yield* call({ type: 'wait', secs });
+function wait<Action, State>(secs: number): Saga<Effect, Action, State, number> {
+  return call({ type: 'wait', secs });
 }
 
-function* httpRequest<Action, State>(url: string, method: 'GET' | 'POST' | 'PUT' = 'GET', body: ?string): Saga<Effect, Action, State, string> {
-  return yield* call({ type: 'httpRequest', url, method, body });
+function httpRequest<Action, State>(url: string, method: 'GET' | 'POST' | 'PUT' = 'GET', body: ?string): Saga<Effect, Action, State, string> {
+  return call({ type: 'httpRequest', url, method, body });
 }
 
 function* saga(): Saga<Effect, Action, State, void> {
