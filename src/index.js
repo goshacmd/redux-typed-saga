@@ -22,3 +22,7 @@ export function* take<Effect, Action, State, A>(actionMatcher: (action: Action) 
 export function* call<Effect, Action, State>(effect: Effect): Saga<Effect, Action, State, any> {
   return yield { type: 'command', command: { type: 'call', effect } };
 }
+
+export function* spawn<Effect, Action, State>(saga: Saga<Effect, Action, State, any>): Saga<Effect, Action, State, void> {
+  return yield { type: 'command', command: { type: 'spawn', saga } };
+}
