@@ -1,11 +1,23 @@
-# :construction: redux-typed-saga
+# :smiling_imp: redux-typed-saga
 
 Redux-typed-saga is an alternative, well-typed take on the awesome [redux-saga](https://github.com/yelouafi/redux-saga).
+
 The inspiration for typing side effects came from [Redux Ship](https://github.com/clarus/redux-ship).
-However, Redux Ship has a totally different paradigm.
+However, Redux Ship has a totally different paradigm, and I don't want to buy into that completely.
 
 This :construction: experimental project aims to rethink redux-saga with types as first-class citizens.
 
+```javascript
+function* saga(): Saga<Effect, Action, State, void> {
+  const num = yield* select(x => x + 10);
+  yield* put(set(50));
+  const action = yield* take(x => x.type === 'SET' ? x : null);
+
+  // effects are fully user-defined
+  yield* Effects.wait(1);
+  const response = yield* Effects.httpRequest({ url: 'http://example.com' });
+}
+```
 
 ## Installation and usage
 
