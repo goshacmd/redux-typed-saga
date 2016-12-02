@@ -1,12 +1,13 @@
 // @flow
 
-import type { Saga, EffectRunner } from './types';
+import type { Saga, EffectRunner, TaskId } from './types';
 import type { SubscribeFn } from './emitter';
 
-export type Runner<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>) => void;
+type ProcessCreator<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>) => TaskId;
+export type Runner<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>) => () => void;
 
 export default function createRunner<Action, State>(getState: () => State, dispatch: (action: Action) => void, subscribe: SubscribeFn<Action>): Runner<Action, State> {
-  return function<Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>): void {
+  return function<Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>): () => void {
     function nxt(next) {
       if (next.done) return;
 
@@ -43,7 +44,7 @@ export default function createRunner<Action, State>(getState: () => State, dispa
           break;
         }
         case 'spawn': {
-          createRunner(getState, dispatch, subscribe)(runEffect, command.saga);
+          createProcess(runEffect, command.saga);
           nxt(saga.next());
           break;
         }
@@ -51,5 +52,8 @@ export default function createRunner<Action, State>(getState: () => State, dispa
     }
 
     nxt(saga.next());
+
+    const onKill = () => {};
+    return onKill;
   }
 }
