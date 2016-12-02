@@ -1,6 +1,6 @@
 // @flow
 
-import type { Saga } from './types';
+import type { Saga, TaskId } from './types';
 import type { SagaMiddleware } from './middleware';
 import _createSagaMiddleware from './middleware';
 
@@ -25,4 +25,8 @@ export function* call<Effect, Action, State>(effect: Effect): Saga<Effect, Actio
 
 export function* spawn<Effect, Action, State>(saga: Saga<Effect, Action, State, any>): Saga<Effect, Action, State, void> {
   return yield { type: 'command', command: { type: 'spawn', saga } };
+}
+
+export function* kill<Effect, Action, State>(taskId: TaskId): Saga<Effect, Action, State, TaskId> {
+  return yield { type: 'command', command: { type: 'kill', taskId } };
 }

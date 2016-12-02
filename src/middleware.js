@@ -26,7 +26,7 @@ export default function createSagaMiddleware<State, Action>(): SagaMiddleware<St
   function sagaMiddleware({ getState, dispatch }) {
     const sagaEmitter: Emitter<Action> = emitter();
 
-    runSagaDynamically = createRunner(getState, dispatch, sagaEmitter.subscribe);
+    runSagaDynamically = createRunner(getState, dispatch, sagaEmitter.subscribe, taskTable);
     return next => action => {
       sagaEmitter.emit(action);
       return next(action);
@@ -34,8 +34,8 @@ export default function createSagaMiddleware<State, Action>(): SagaMiddleware<St
   }
   sagaMiddleware.run = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>): TaskId => {
     const id = genId();
-    const onKill = runSagaDynamically(runEffect, saga, sagaMiddleware.run);
-    taskTable[id] = { onKill };
+    const task = runSagaDynamically(runEffect, saga, sagaMiddleware.run);
+    taskTable[id] = task;
     return id;
   };
 

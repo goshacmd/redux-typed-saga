@@ -93,10 +93,14 @@ The reason for this is: typing.
   To actually apply the effect, redux-typed-saga will call the `runEffect` function that you have to pass to `sagaMiddleware.run(runEffect, saga)`.
   The `runEffect` function has a type of `(effect: Effect) => Promise<any>`.
 
-* `spawn<Effect, Action, State>(saga: Saga<Effect, Action, State, any>): Saga<Saga, Effect, Action, State, any>`
+* `spawn<Effect, Action, State>(saga: Saga<Effect, Action, State, any>): Saga<Saga, Effect, Action, State, TaskId>`
 
-  Spawn a saga from within a saga, just like in redux-saga, creates a detached fork.
+  Spawn a saga (task) from within a saga, just like in redux-saga, creates a detached fork.
   This is similar to calling `sagaMiddleware.run`.
+
+* `kill<Effect, Action, State>(saga: Saga<Effect, Action, State, any>): Saga<Saga, Effect, Action, State, TaskId>`
+
+  Kill a previously spawned saga (task).
 
 ## Pending
 

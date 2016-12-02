@@ -1,13 +1,13 @@
 // @flow
 
-import type { Saga, EffectRunner, TaskId } from './types';
+import type { Saga, EffectRunner, TaskTable, TaskId, Task } from './types';
 import type { SubscribeFn } from './emitter';
 
 type ProcessCreator<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>) => TaskId;
-export type Runner<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>) => () => void;
+export type Runner<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>) => Task;
 
-export default function createRunner<Action, State>(getState: () => State, dispatch: (action: Action) => void, subscribe: SubscribeFn<Action>): Runner<Action, State> {
-  return function<Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>): () => void {
+export default function createRunner<Action, State>(getState: () => State, dispatch: (action: Action) => void, subscribe: SubscribeFn<Action>, taskTable: TaskTable): Runner<Action, State> {
+  return function<Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>): Task {
     function nxt(next) {
       if (next.done) return;
 
@@ -44,7 +44,15 @@ export default function createRunner<Action, State>(getState: () => State, dispa
           break;
         }
         case 'spawn': {
-          createProcess(runEffect, command.saga);
+          const taskId = createProcess(runEffect, command.saga);
+          nxt(saga.next(taskId));
+          break;
+        }
+        case 'kill': {
+          // TODO: interpret the `finally` block, allow checking whether a task was killed
+          const task = taskTable[command.taskId];
+          if (!task) saga.throw(new Error(`Task with id ${command.taskId} does not exist`));
+          task.kill();
           nxt(saga.next());
           break;
         }
@@ -53,7 +61,14 @@ export default function createRunner<Action, State>(getState: () => State, dispa
 
     nxt(saga.next());
 
-    const onKill = () => {};
-    return onKill;
+    const noop = () => {};
+
+    const task = { status: 'running', kill: noop };
+    task.kill = () => {
+      saga.return();
+      task.status = 'dead';
+      task.kill = noop;
+    };
+    return task;
   }
 }
