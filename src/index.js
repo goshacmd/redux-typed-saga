@@ -30,3 +30,7 @@ export function* spawn<Effect, Action, State>(saga: Saga<Effect, Action, State, 
 export function* kill<Effect, Action, State>(taskId: TaskId): Saga<Effect, Action, State, TaskId> {
   return yield { type: 'command', command: { type: 'kill', taskId } };
 }
+
+export function* isDying<Effect, Action, State>(): Saga<Effect, Action, State, bool> {
+  return yield { type: 'command', command: { type: 'isDying' } };
+}

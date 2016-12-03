@@ -7,7 +7,8 @@ export type Command<Effect, Action, State> =
   { type: 'select', selector: (state: State) => any } |
   { type: 'call', effect: Effect } |
   { type: 'spawn', saga: Saga<Effect, Action, State, any> } |
-  { type: 'kill', taskId: TaskId };
+  { type: 'kill', taskId: TaskId } |
+  { type: 'isDying' };
 export type Saga<Effect, Action, State, A> = Generator<Yield<Effect, Action, State>, A, any>;
 
 export type EffectRunner<Effect> = (effect: Effect) => Promise<any>;

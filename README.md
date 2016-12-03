@@ -102,6 +102,12 @@ The reason for this is: typing.
 
   Kill a previously spawned saga (task).
 
+* `isDying<Effect, Action, State>(): Saga<Effect, Action, State, bool>`
+
+  :construction: Detect whether a saga is being killed.
+  This will typically be needed in `finally` to clean up after the saga.
+  However, using `yield*` in `finally` is currently broken in Babel / ES spec, as it will terminate the generator completely.
+
 ## Pending
 
 Note this is an early :construction: prototype.

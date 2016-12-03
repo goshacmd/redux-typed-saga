@@ -9,7 +9,11 @@ export type Runner<Action, State> = <Effect>(runEffect: EffectRunner<Effect>, sa
 export default function createRunner<Action, State>(getState: () => State, dispatch: (action: Action) => void, subscribe: SubscribeFn<Action>, taskTable: TaskTable): Runner<Action, State> {
   return function<Effect>(runEffect: EffectRunner<Effect>, saga: Saga<Effect, Action, State, any>, createProcess: ProcessCreator<Action, State>): Task {
     function nxt(next) {
-      if (next.done) return;
+      if (next.done) {
+        task.status = 'dead';
+        task.kill = noop;
+        return;
+      }
 
       const command = next.value.command;
 
@@ -49,11 +53,14 @@ export default function createRunner<Action, State>(getState: () => State, dispa
           break;
         }
         case 'kill': {
-          // TODO: interpret the `finally` block, allow checking whether a task was killed
           const task = taskTable[command.taskId];
           if (!task) saga.throw(new Error(`Task with id ${command.taskId} does not exist`));
           task.kill();
           nxt(saga.next());
+          break;
+        }
+        case 'isDying': {
+          nxt(saga.next(task.status === 'dying'));
           break;
         }
       }
@@ -65,9 +72,11 @@ export default function createRunner<Action, State>(getState: () => State, dispa
 
     const task = { status: 'running', kill: noop };
     task.kill = () => {
-      saga.return();
-      task.status = 'dead';
+      // TODO: cancel `take` and `call` on kill
+      task.status = 'dying';
       task.kill = noop;
+      const ret = saga.return();
+      nxt(saga.return());
     };
     return task;
   }
